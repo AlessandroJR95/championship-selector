@@ -9,43 +9,51 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 
-export function WinnerHistory(props) {
-    const { roundHistory } = props;
+function getWinnersPodium(winners) {
+    const top5 = winners.slice(-5).reverse();
+
+    return top5.reduce((acc, winner) => {
+        const name = winner.participant.text;
+
+        if (acc.some((win) => win.name === name)) {
+            return acc;
+        }
+
+        return acc.concat([{ name }]);
+    }, []);
+}
+
+export function WinnerPodium(props) {
+    const { winners } = props;
 
     return (
         <Box>
             <Box>
                 <Typography variant={'h5'} color={'primary'}>
-                    {'Histórico'}
+                    {'Posições'}
                 </Typography>
             </Box>
             <TableContainer component={Paper}>
                 <Table size="small">
                     <TableHead>
                         <TableRow>
-                            <TableCell>Round</TableCell>
-                            <TableCell>Ganhador</TableCell>
-                            <TableCell>Perdedor</TableCell>
+                            <TableCell>Posição</TableCell>
+                            <TableCell>Nome</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                     {
-                        roundHistory.map((history, index) => {
+                        getWinnersPodium(winners).map((winner, index) => {
                             return (
                                 <TableRow key={index}>
                                     <TableCell>
                                         <Typography variant={'body1'} color={'primary'}>
-                                            {history.round}
+                                            {`${index + 1}º`}
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
                                         <Typography variant={'body1'} color={'primary'}>
-                                            {history.winner}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Typography variant={'body1'} color={'secondary'}>
-                                            {history.loser}
+                                            {winner.name}
                                         </Typography>
                                     </TableCell>
                                 </TableRow>

@@ -5,15 +5,18 @@ import { RoundWinner } from '../../../Components/RoundWinner';
 import { VotingInput } from '../../../Components/VotingInput';
 import { JudgeList } from '../../../Components/JudgeList';
 import { WinnerHistory } from '../../../Components/WinnerHistory';
+import { Fade } from '../../../Components/Fade/Fade';
 
 function VotingView(props) {
     const winnerText = props.winner && props.winner.participant && props.winner.participant.text;
     const { whoVoted, judgeID, roundHistory } = props;
     const [ show, setShow ] = React.useState(Boolean(winnerText));
+    const [ history, setHistory ] = React.useState(false);
 
     const onTransitionEnd = React.useCallback(() => {
         setShow(false);
-    }, [setShow]);
+        setHistory(true);
+    }, [setShow, setHistory]);
 
     const readyCheck = React.useCallback(({ id }) => {
         return whoVoted.indexOf(id) !== -1;
@@ -21,7 +24,7 @@ function VotingView(props) {
 
     React.useEffect(() => {
         setShow(Boolean(winnerText));
-    }, [winnerText]);
+    }, [winnerText, setShow]);
 
     return (
         <Grid container>
@@ -55,9 +58,11 @@ function VotingView(props) {
                 />
             </Grid>
             <Grid item xs={12} style={{marginTop: 50}}>
-                <WinnerHistory 
-                    roundHistory={roundHistory}
-                />
+                <Fade show={history}>
+                    <WinnerHistory 
+                        roundHistory={roundHistory}
+                    />
+                </Fade>
             </Grid>
         </Grid>
     );

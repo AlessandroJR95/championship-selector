@@ -10,6 +10,7 @@ function WinnerContainer(props) {
             winner={state.winners[state.winners.length - 1]}
             onRestart={actions.restartChampionship}
             isOwner={state.isOwner}
+            winners={state.winners}
         />
     );
 }

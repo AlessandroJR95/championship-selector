@@ -6,15 +6,16 @@ import { WinnerBadge } from './WinnerBadge';
 
 export function RoundWinner(props) {
     const [ showIntroduction, setShowIntroduction ] = React.useState(false);
-    const { onTransitionEnd, fadeOut } = props;
+    const { onTransitionEnd, onEntered, fadeOut } = props;
 
     const dismissAnnoucer = React.useCallback(() => {
+        onEntered && onEntered();
         setTimeout(() => {
             if (fadeOut) {
                 setShowIntroduction(false);
             }
         }, 1500);
-    }, [setShowIntroduction, fadeOut]);
+    }, [setShowIntroduction, fadeOut, onEntered]);
 
     React.useLayoutEffect(() => {
         setShowIntroduction(true);
