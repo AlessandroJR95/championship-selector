@@ -1,0 +1,20 @@
+.page {
+    position: absolute;
+    width: 100%;
+    top: 0;
+}
+.page-enter {
+    opacity: 0;
+}
+.page-enter-active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 300ms;
+}
+.page-exit {
+    opacity: 1;
+}
+.page-exit-active {
+    opacity: 0;
+    transition: opacity 300ms;
+}

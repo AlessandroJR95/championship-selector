@@ -1,0 +1,36 @@
+version: '3'
+services:
+  front:
+    image: "node:current-alpine3.10"
+    working_dir: /usr/local/app
+    command: npm run watch
+    volumes:
+      - ../champion-selector-front:/usr/local/app
+      - ../champion-selector-connector:/usr/local/champion-selector-connector
+      - front-assets:/usr/local/app/dist
+  
+  back:
+    image: "node:current-alpine3.10"
+    working_dir: /usr/local/app
+    command: npm run watch
+    ports:
+      - "8080:8080"
+    environment: 
+      - SESSION_SECRET=dev
+      - LOG_PATH=log
+    volumes:
+      - ../champion-selector:/usr/local/app
+      - ../champion-selector/log:/usr/local/app/log
+
+  web:
+    image: "nginx"
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf:/etc/nginx
+      - front-assets:/usr/share/nginx/html
+
+volumes:
+  front-assets:
+    external:
+      name: front-assets
