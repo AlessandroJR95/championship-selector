@@ -149,6 +149,6 @@
     "webpack-manifest-plugin": "2.2.0",
     "workbox-webpack-plugin": "4.3.1",
     "react-app-polyfill": "^1.0.6",
-    "react-dev-utils": "^10.2.1"
+    "react-dev-utils": "^11.0.4"
   }
 }
