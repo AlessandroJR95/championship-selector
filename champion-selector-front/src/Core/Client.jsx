@@ -12,6 +12,7 @@ export const phases = {
     PREPARATION: 'PREPARATION',
     ENTERING: 'ENTERING',
     ERROR: 'ERROR',
+    LOADING: 'LOADING'
 }
 
 const actionType = {
@@ -20,6 +21,7 @@ const actionType = {
     BLOCK_INPUT: 'BLOCK_INPUT',
     SYNC_STATE: 'SYNC_STATE',
     FREE_INPUT: 'FREE_INPUT',
+    WILL_BLOCK_INPUT: 'WILL_BLOCK_INPUT'
 };
 
 const clientReducer = (state, action) => {
@@ -29,10 +31,12 @@ const clientReducer = (state, action) => {
             return Object.assign({}, state, action.payload);
         case actionType.CHANGE_PHASE:
             return Object.assign({}, state, { phase: action.payload.phase });
+        case actionType.WILL_BLOCK_INPUT:
+            return Object.assign({}, state, { willBlockInput: true });
         case actionType.BLOCK_INPUT:
             return Object.assign({}, state, { canInput: false });
         case actionType.FREE_INPUT:
-            return Object.assign({}, state, { canInput: true });
+            return Object.assign({}, state, { canInput: true, willBlockInput: false });
         case actionType.ERROR_PHASE:
             return Object.assign({}, state, {
                 phase: phases.ERROR,
@@ -48,19 +52,65 @@ const clientInitialState = {
 };
 
 function getRoundHistory(winners, rounds) {
-    if (!winners || !rounds) {
-        return [];
+    if (!winners || !winners.length || !rounds) {
+        return [
+            {
+                round: '-',
+                winner: '-',
+                loser: '-'
+            }
+        ];
     }
 
-    return winners.slice(0, winners.length - 1).map((winner, index) => {
+    return winners.map((winner, index) => {
         const loser = rounds[index].find((participant) => participant.participantID !== winner.participant.participantID);
 
         return {
             round: index + 1,
-            winner: winner.participant.text,
-            loser: loser.text
+            winner: winner.participant.data.text,
+            loser: loser.data.text
         }
     });
+}
+
+function calculatePoints(winners, votes, likes, judgeID) {
+    const judgePointMap = new Map(likes.filter((like) => like.judge.judgeID === judgeID).map((like) => [like.participant.participantID, true]));
+
+    const votePoints = votes.reduce((sum, round) => {
+        return round.reduce((acc, vote) => {
+            return judgePointMap.get(vote.participant.participantID) ? acc + 1 : acc;
+        }, sum);
+    }, 0);
+
+    const winnerPoints = winners.reduce((sum, winner) => {
+        return judgePointMap.get(winner.participant.participantID) ? sum + 5 : sum;
+    }, 0);
+
+    return winnerPoints + votePoints;
+}
+
+function getScoreboard(winners, votes, judges, likes) {
+    if (!judges) {
+        return [];
+    }
+
+    return judges.reduce((scoreboard, judge) => {
+        const points = calculatePoints(winners, votes, likes, judge.judgeID);
+
+        return scoreboard.concat({
+            id: judge.judgeID,
+            name: judge.name,
+            points,
+            text: points
+        });
+    }, []).sort((a, b) => a.points > b.points ? -1 : 1);
+}
+
+function getLikeList(participantList, likeList, judgeID) {
+    const participants = participantList || [];
+    const likes = likeList || [];
+    const participantsLookup = new Map(participants.map((p) => [p.participantID, p.data.text]));
+    return likes.filter((like) => like.judge.judgeID === judgeID).map((like) => participantsLookup.get(like.participant.participantID));
 }
 
 function getRound(clientState) {
@@ -71,16 +121,25 @@ function getChampionshipProgress(clientState) {
     return clientState.participants ? (clientState.round / (clientState.participants.length - 2)) * 100 : 0;
 }
 
+function getRoundName(participantsList, actualRound) {
+    const participantsLength = participantsList ? participantsList.length : 0;
+    const isFinalRound = participantsLength - 2 === actualRound;
+    const isSemiFinalRound = participantsLength - 3 === actualRound;
+
+    if (isFinalRound) return "Final";
+    if (isSemiFinalRound) return "Semi Final";
+}
+
 function useClientState(props) {
     const connectionRef = React.useRef({ connection: null });
     const [ clientState, dispatch ] = React.useReducer(clientReducer, clientInitialState);
 
-    const { championshipID, setLoading } = props;
+    const { championshipID, setLoading, getState, getActions } = props;
 
     const actions = React.useMemo(() => {
         return {
             startChampionship: () => {
-                dispatch({ type: actionType.BLOCK_INPUT });
+                dispatch({ type: actionType.WILL_BLOCK_INPUT });
                 setLoading(true);
 
                 Connector.startChampionship({ championshipID }).finally(() => {
@@ -89,7 +148,7 @@ function useClientState(props) {
                 });
             },
             addParticipant: (participantName) => {
-                dispatch({ type: actionType.BLOCK_INPUT });
+                dispatch({ type: actionType.WILL_BLOCK_INPUT });
                 setLoading(true);
 
                 Connector.addParticipantInChampionship({ championshipID, participantName }).finally(() => {
@@ -98,7 +157,7 @@ function useClientState(props) {
                 });
             },
             addVote: (participant) => {
-                dispatch({ type: actionType.BLOCK_INPUT });
+                dispatch({ type: actionType.WILL_BLOCK_INPUT });
 
                 Connector.voteInParticipant({ championshipID, participant }).catch(() => {
                     dispatch({ type: actionType.FREE_INPUT });
@@ -106,7 +165,7 @@ function useClientState(props) {
             },
             enterChampionship: ({ judge, reconnection }) => {
                 setLoading(true);
-                dispatch({ type: actionType.BLOCK_INPUT });
+                dispatch({ type: actionType.WILL_BLOCK_INPUT });
 
                 connectionRef.current.connection = Connector.subscribeToChampionship({
                     championshipID,
@@ -119,7 +178,7 @@ function useClientState(props) {
                 });
             },
             deleteParticipant: ({ participantID }) => {
-                dispatch({ type: actionType.BLOCK_INPUT });
+                dispatch({ type: actionType.WILL_BLOCK_INPUT });
                 setLoading(true);
 
                 Connector.removeParticipantFromChampionship({ championshipID, participantID }).finally(() => {
@@ -128,7 +187,7 @@ function useClientState(props) {
                 });
             },
             imJudgeAndImReady: () => {
-                dispatch({ type: actionType.BLOCK_INPUT });
+                dispatch({ type: actionType.WILL_BLOCK_INPUT });
 
                 Connector.judgeIsReady({ championshipID }).catch(() => {
                     dispatch({ type: actionType.FREE_INPUT });
@@ -139,6 +198,36 @@ function useClientState(props) {
             },
             kickJudge: (judgeID) => {
                 Connector.removeJudgeFromChampionship({ championshipID, judgeID });
+            },
+            rerollMovieList: () => {
+                dispatch({ type: actionType.WILL_BLOCK_INPUT });
+                setLoading(true);
+
+                Connector.rerollMovieList({ championshipID }).finally(() => {
+                    dispatch({ type: actionType.FREE_INPUT });
+                    setLoading(false);
+                });
+            },
+            startMovieChampionship: () => {
+                dispatch({ type: actionType.WILL_BLOCK_INPUT });
+                setLoading(true);
+
+                Connector.startMovieChampionship({ championshipID }).finally(() => {
+                    dispatch({ type: actionType.FREE_INPUT });
+                    setLoading(false);
+                });
+            },
+            likeParticipant: ({ participantID }) => {
+                dispatch({ type: actionType.WILL_BLOCK_INPUT });
+                setLoading(true);
+
+                Connector.likeParticipant({ championshipID, participantID }).finally(() => {
+                    dispatch({ type: actionType.FREE_INPUT });
+                    setLoading(false);
+                });
+            },
+            fetchInviteLink: () => {
+                return Connector.generateInvite({ championshipID }).then((linkURI) => Promise.resolve(`${window.location.origin}/back${linkURI}`));
             }
         };
     }, [championshipID, dispatch, setLoading]);
@@ -157,12 +246,33 @@ function useClientState(props) {
             isReady: clientState.isReady,
             winners: clientState.winners,
             judgeID: clientState.judgeID,
+            context: clientState.context,
+            likes: clientState.likes,
             phase: clientState.phase,
             round: getRound(clientState),
             progress: getChampionshipProgress(clientState),
-            roundHistory: getRoundHistory(clientState.winners, clientState.rounds)
+            roundHistory: getRoundHistory(clientState.winners, clientState.rounds),
+            scoreboard: getScoreboard(clientState.winners, clientState.votes, clientState.judges, clientState.likes),
+            roundName: getRoundName(clientState.participants, clientState.round),
+            likeList: getLikeList(clientState.participants, clientState.likes, clientState.judgeID)
         };
     }, [clientState]);
+
+    React.useEffect(() => {
+        let timeout;
+
+        if (clientState.willBlockInput) {
+            timeout = setTimeout(() => {
+                dispatch({ type: actionType.BLOCK_INPUT });
+            }, 200);
+        } else {
+            dispatch({ type: actionType.FREE_INPUT });
+        }
+
+        return () => {
+            clearTimeout(timeout);
+        };
+    }, [clientState.willBlockInput]);
 
     React.useEffect(() => {
         setLoading(true);
@@ -197,9 +307,9 @@ function useClientState(props) {
     React.useEffect(() => {
         dispatch({ type: actionType.FREE_INPUT });
         setLoading(false);
-    }, [clientState.phase, dispatch, setLoading]);
+    }, [clientState.round, clientState.phase, clientState.isOwner, dispatch, setLoading]);
 
-    return [ selectedState, actions ];
+    return [ getState(selectedState, clientState), getActions({ actions, setLoading, Connector, championshipID }) ];
 }
 
 export function useClientStateContext() {
@@ -211,7 +321,12 @@ export function useClientStateContext() {
 
 export function Provider(props) {
     const { setLoading } = useLoadingContext();
-    const [ state, actions ] = useClientState({ championshipID: props.championshipID, setLoading: setLoading });
+    const [ state, actions ] = useClientState({ 
+        championshipID: props.championshipID,
+        setLoading: setLoading,
+        getState: props.getState,
+        getActions: props.getActions
+    });
 
     return (
         <ClientActionContext.Provider value={actions}>
@@ -221,3 +336,8 @@ export function Provider(props) {
         </ClientActionContext.Provider>
     );
 }
+
+Provider.defaultProps = {
+    getState: (identity) => identity,
+    getActions: (api) => api.actions
+};

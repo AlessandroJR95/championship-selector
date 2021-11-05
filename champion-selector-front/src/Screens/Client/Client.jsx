@@ -5,7 +5,7 @@ import { Winner } from './Containers/Winner';
 import { Voting } from './Containers/Voting';
 import { Preparation } from './Containers/Preparation';
 import { Subscription } from './Containers/Subscription';
-import { Error } from '../../Components/Error';
+import { Error } from './Components/Error';
 import { RouteAnimation } from '../../Components/RouteAnimation/RouteAnimation';
 
 const ENTERING = 'entering';

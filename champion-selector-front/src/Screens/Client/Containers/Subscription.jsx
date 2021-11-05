@@ -7,6 +7,7 @@ function SubscriptionContainer(props) {
     
     return (
         <SubscriptionView
+            {...props}
             onSubmit={actions.enterChampionship}
             championshipID={props.championshipID}
             canEnter={state.canInput}

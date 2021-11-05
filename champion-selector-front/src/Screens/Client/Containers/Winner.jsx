@@ -7,9 +7,12 @@ function WinnerContainer(props) {
 
     return (
         <WinnerView
+            {...props}
             winner={state.winners[state.winners.length - 1]}
             onRestart={actions.restartChampionship}
             isOwner={state.isOwner}
+            winners={state.winners}
+            scoreboard={state.scoreboard}
         />
     );
 }

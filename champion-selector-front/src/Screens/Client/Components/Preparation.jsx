@@ -8,9 +8,15 @@ import { ParticipantList } from '../../../Components/ParticipantList';
 import { ParticipantInput } from '../../../Components/ParticipantInput';
 
 function PreparationView(props) {
-    const readyCheck = React.useCallback(({ isReady }) => {
-        return isReady;
+    const { ParticipantListCmp, ParticipantInputCmp, judgeID, likes, isOwner } = props;
+
+    const readyCheck = React.useCallback(({ ready }) => {
+        return ready;
     }, []);
+
+    const isLiked = React.useCallback(({ participantID }) => {
+        return likes.some((like) => like.judge.judgeID === judgeID && like.participant.participantID === participantID);
+    }, [judgeID, likes]);
 
     return (
         <Grid container spacing={0}>
@@ -20,36 +26,39 @@ function PreparationView(props) {
                         judgeList={props.judgeList}
                         readyCheck={readyCheck}
                         judgeID={props.judgeID}
-                        onKick={props.onJudgeKick}
+                        onKick={isOwner ? props.onJudgeKick : null}
                     />
                 </Box>
             </Grid>
             <Grid item xs={12}>
                 <Box style={{ margin: 20 }}>
-                    <Paper style={{ height: 200, maxHeight: 250, overflow: 'auto' }}>
-                        <ParticipantList 
+                    <Paper style={{ height: 400, maxHeight: 400, overflow: 'auto' }}>
+                        <ParticipantListCmp 
                             participantList={props.participantList}
-                            canDelete={props.isOwner}
+                            canDelete={isOwner}
                             disableDelete={props.disableListDelete}
                             onDelete={props.onParticipantDelete}
+                            onLike={props.onParticipantLike}
+                            isLiked={isLiked}
                         />
                     </Paper>
                 </Box>
             </Grid>
             <Grid item xs={12}>
                 <Box style={{ textAlign: 'center', margin: 10 }}>
-                    <ParticipantInput 
+                    <ParticipantInputCmp
                         addParticipant={props.addParticipant}
                         canAddParticipant={props.canAddParticipant}
                     />
                 </Box>
+                {props.children}
             </Grid>
             <Grid item xs={12}>
                 <Box style={{ margin: 10 }}>
                     {
-                        props.isOwner ? (
+                        isOwner ? (
                             <div style={{ textAlign: 'center' }}>
-                                <Button variant="outlined" color="secondary" onClick={props.startChampionship} disabled={!props.allReady}>
+                                <Button variant="outlined" color="secondary" onClick={props.startChampionship} disabled={!props.allReady || !props.canStartChampionship}>
                                     Começar a votação!
                                 </Button>
                             </div>
@@ -65,6 +74,11 @@ function PreparationView(props) {
             </Grid>
         </Grid>
     );
+}
+
+PreparationView.defaultProps = {
+    ParticipantListCmp: ParticipantList,
+    ParticipantInputCmp: ParticipantInput
 }
 
 export const Preparation = React.memo(PreparationView);

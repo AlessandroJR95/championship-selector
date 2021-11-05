@@ -5,6 +5,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import LabelIcon from '@material-ui/icons/Label';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
+import ThumbUpIcon from '@material-ui/icons/ThumbUp';
 import IconButton from '@material-ui/core/IconButton';
 import Divider from '@material-ui/core/Divider';
 import Typography from '@material-ui/core/Typography';
@@ -28,6 +29,23 @@ function ParticipantItemDeleteButton(props) {
     );
 }
 
+function ParticipantItemLikeButton(props) {
+    const { onLike, participantID, liked } = props;
+
+    const onClick = React.useCallback(() => {
+        onLike({ participantID });
+    }, [participantID, onLike]);
+
+    return (
+        <IconButton
+            color={liked ? "secondary" : "primary"}
+            onClick={onClick}
+        >
+            <ThumbUpIcon />
+        </IconButton>
+    );
+}
+
 export function ParticipantList(props) {
     return (
         <List dense>
@@ -41,9 +59,16 @@ export function ParticipantList(props) {
                                     <ListItemIcon><LabelIcon /></ListItemIcon>
                                     <ListItemText>
                                         <Typography variant={'body1'}>
-                                            {item.text}
+                                            {item.data.text}
                                         </Typography>
                                     </ListItemText>
+                                    <ListItemIcon>
+                                        <ParticipantItemLikeButton
+                                            participantID={item.participantID}
+                                            onLike={props.onLike}
+                                            liked={props.isLiked && props.isLiked(item)}
+                                        />
+                                    </ListItemIcon>
                                     { props.canDelete && (
                                         <ListItemIcon>
                                             <ParticipantItemDeleteButton

@@ -17,7 +17,7 @@
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js",
-    "watch": "node ./node_modules/webpack/bin/webpack.js --config scripts/watch.js --watch",
+    "watch": "node ./node_modules/.bin/webpack --config scripts/watch.js --watch",
     "analyze": "node scripts/analyze.js"
   },
   "eslintConfig": {

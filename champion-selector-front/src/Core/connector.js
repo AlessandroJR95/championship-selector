@@ -2,6 +2,105 @@ import Notification from './notification';
 import axios from 'axios';
 import { Connector } from 'champion-selector-connector';
 
+class EventSourceBridge {
+    constructor(observer) {
+        this.observer = observer;
+        this.eventSource = null;
+        this.MAX_RETRY = 10;
+        this.reconnectionRetries = 0;
+        this.retrying = false;
+
+        this.handleData = this.handleData.bind(this);
+        this.handleError = this.handleError.bind(this);
+        this.handleServerError = this.handleServerError.bind(this);
+        this.notifyError = this.notifyError.bind(this);
+    }
+
+    static of(observer) {
+        return new EventSourceBridge(observer);
+    }
+
+    retryConnection() {
+        if (!this.retrying) {
+            this.retrying = true;
+            setTimeout(() => {
+                this.unsubscribe();
+                this.connect(this.eventSource.url);
+                this.retrying = false;
+            }, this.reconnectionRetries * 1000);
+        }
+    }
+
+    handleData(event) {
+        try {
+            this.observer.next(JSON.parse(event.data));
+            this.reconnectionRetries = 0;
+        } catch (e) {
+            this.notifyError(e);
+        }
+    }
+
+    handleError(error) {
+        this.reconnectionRetries = this.reconnectionRetries + 1;
+
+        if (error.target.readyState === 2) {
+            this.retryConnection();
+        }
+
+        if (this.reconnectionRetries > this.MAX_RETRY) {
+            this.eventSource.close();
+        }
+
+        this.notifyDisconnection(error);
+    }
+
+    handleServerError(event) {
+        this.eventSource.close();
+
+        try {
+            this.notifyError(JSON.parse(event.data));
+        } catch (e) {
+            this.notifyError(e);
+        }
+    }
+
+    notifyError(err) {
+        this.observer.error(err);
+    }
+
+    notifyDisconnection() {
+        this.observer.disconnection(this.reconnectionRetries);
+    }
+
+    addEvents() {
+        this.removeEvents();
+        this.eventSource.addEventListener('data', this.handleData);
+        this.eventSource.addEventListener('error', this.handleError);
+        this.eventSource.addEventListener('serverError', this.handleServerError);
+    }
+
+    removeEvents() {
+        this.eventSource.removeEventListener('data', this.handleData);
+        this.eventSource.removeEventListener('error', this.handleError);
+        this.eventSource.removeEventListener('serverError', this.handleServerError);
+    }
+
+    connect(url) {
+        this.eventSource = new EventSource(url);
+    
+        this.addEvents();
+
+        return () => {
+            this.unsubscribe();
+        }
+    }
+
+    unsubscribe() {
+        this.removeEvents();
+        this.eventSource.close();
+    }
+}
+
 class ConnectorBridge {
     constructor(connector, notificationClient) {
         this.EVENTS_URL = '/events';
@@ -10,8 +109,8 @@ class ConnectorBridge {
         this.subscribeToChampionship = this.subscribeToChampionship.bind(this);
     }
 
-    createChampionship() {
-        return this.connector.createChampionship();
+    createChampionship(config) {
+        return this.connector.createChampionship(config);
     }
 
     getChampionshipInfo({ championshipID }) {
@@ -26,37 +125,15 @@ class ConnectorBridge {
     }
 
     connectToEventSource({ championshipID, observer }) {
-        const eventSource = new EventSource(`${this.EVENTS_URL}/room/${championshipID}/subscribe`)
-    
-            eventSource.addEventListener('data', (event) => {
-                try {
-                    observer.next(JSON.parse(event.data));
-                } catch (e) {
-                    observer.error(e);
-                }
-            });
-
-            eventSource.addEventListener('error', (e) => {
-                eventSource.close();
-                console.log('clientError: ', e);
-            });
-
-            eventSource.addEventListener('serverError', (event) => {
-                eventSource.close();
-
-                console.log('serverError: ', event);
-
-                try {
-                    observer.error(JSON.parse(event.data));
-                } catch (e) {
-                    observer.error(e);
-                }
-            });
-
-            return () => {
-                console.log('unsubscribe');
-                eventSource.close();
+        return EventSourceBridge.of({
+            next: (data) => {
+                observer.next(data);
+            },
+            error: observer.error.bind(observer),
+            disconnection: (retries) => {
+                this.notificationClient.error(`Você foi desconectado, reconectando... ${retries}`);
             }
+        }).connect(`${this.EVENTS_URL}/room/${championshipID}/subscribe`);
     }
 
     subscribeToChampionship({ championshipID, judge, reconnection, observer }) {
@@ -107,6 +184,17 @@ class ConnectorBridge {
             });
     }
 
+    readyQuiz({ championshipID, questions }) {
+        return this.connector.readyQuiz({ championshipID, questions })
+            .catch(({ response }) => {
+                this.notificationClient.error(response.data.message);
+            });
+    }
+
+    createQuiz(config) {
+        return this.connector.createQuiz(config);
+    }
+
     restartChampionship({ championshipID }) {
         return this.connector.restartChampionship({ championshipID })
             .catch(({ response }) => {
@@ -116,6 +204,34 @@ class ConnectorBridge {
 
     judgeIsReady({ championshipID }) {
         return this.connector.judgeIsReady({ championshipID })
+            .catch(({ response }) => {
+                this.notificationClient.error(response.data.message);
+            });
+    }
+
+    rerollMovieList({ championshipID }) {
+        return this.connector.rerollMovieList({ championshipID })
+            .catch(({ response }) => {
+            this.notificationClient.error(response.data.message);
+        });
+    }
+
+    likeParticipant({ championshipID, participantID }) {
+        return this.connector.likeParticipant({ championshipID, participantID })
+            .catch(({ response }) => {
+                this.notificationClient.error(response.data.message);
+            });
+    }
+
+    generateInvite({ championshipID }) {
+        return this.connector.generateInvite({ championshipID })
+            .catch(({ response }) => {
+                this.notificationClient.error(response.data.message);
+            });
+    }
+
+    startMovieChampionship({ championshipID }) {
+        return this.connector.startMovieChampionship({ championshipID })
             .catch(({ response }) => {
                 this.notificationClient.error(response.data.message);
             });

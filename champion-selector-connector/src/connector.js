@@ -4,9 +4,9 @@ export class Connector {
         this.httpClient = httpClient;
     }
 
-    createChampionship() {
+    createChampionship(config) {
         return new Promise((resolve, reject) => {
-            this.httpClient.post(`${this.SERVER_URL}/championship/create`)
+            this.httpClient.post(`${this.SERVER_URL}/championship/create`, config)
                 .then(({data}) => {
                     if (data.success) {
                         resolve(data.roomID);
@@ -99,6 +99,62 @@ export class Connector {
         });
     }
 
+    likeParticipant({ championshipID, participantID }) {
+        return new Promise((resolve, reject) => {
+            this.httpClient.post(`${this.SERVER_URL}/championship/${championshipID}/participant/like`, { participantID })
+                .then(({ data }) => {
+                    if (data.success) {
+                        resolve(data.success);
+                    } else {
+                        reject(new Error('An error has ocurred'));
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
+    generateInvite({ championshipID }) {
+        return new Promise((resolve, reject) => {
+            this.httpClient.post(`${this.SERVER_URL}/championship/${championshipID}/invite/create`)
+                .then(({ data }) => {
+                    if (data.success) {
+                        resolve(data.link);
+                    } else {
+                        reject(new Error('An error has ocurred'));
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
+    readyQuiz({ championshipID, questions }) {
+        return new Promise((resolve, reject) => {
+            this.httpClient.post(`${this.SERVER_URL}/quiz-championship/${championshipID}/ready`, { questions })
+                .then(({ data }) => {
+                    if (data.success) {
+                        resolve(data.success);
+                    } else {
+                        reject(new Error('An error has ocurred'));
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
+    createQuiz(config) {
+        return new Promise((resolve, reject) => {
+            this.httpClient.post(`${this.SERVER_URL}/quiz-championship/create`, config)
+                .then(({data}) => {
+                    if (data.success) {
+                        resolve(data.roomID);
+                    } else {
+                        reject(new Error('An error has ocurred'));
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
     startChampionship({ championshipID }) {
         return new Promise((resolve, reject) => {
             this.httpClient.post(`${this.SERVER_URL}/championship/${championshipID}/start`)
@@ -130,6 +186,34 @@ export class Connector {
     judgeIsReady({ championshipID }) {
         return new Promise((resolve, reject) => {
             this.httpClient.post(`${this.SERVER_URL}/championship/${championshipID}/ready`)
+                .then(({ data }) => {
+                    if (data.success) {
+                        resolve(data.success);
+                    } else {
+                        reject(new Error('An error has ocurred'));
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
+    rerollMovieList({ championshipID }) {
+        return new Promise((resolve, reject) => {
+            this.httpClient.post(`${this.SERVER_URL}/movie-championship/${championshipID}/reroll`)
+                .then(({ data }) => {
+                    if (data.success) {
+                        resolve(data.success);
+                    } else {
+                        reject(new Error('An error has ocurred'));
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
+    startMovieChampionship({ championshipID }) {
+        return new Promise((resolve, reject) => {
+            this.httpClient.post(`${this.SERVER_URL}/movie-championship/${championshipID}/start`)
                 .then(({ data }) => {
                     if (data.success) {
                         resolve(data.success);

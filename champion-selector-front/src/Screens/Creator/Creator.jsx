@@ -5,6 +5,7 @@ import {
   } from "react-router-dom";
 import Connector from '../../Core/connector';
 import { useLoadingContext } from '../../Core/Loading'
+import { Center } from '../../Components/Center';
 
 export const Creator = () => {
     const { loading, setLoading } = useLoadingContext();
@@ -21,6 +22,8 @@ export const Creator = () => {
     }, [setLoading, history]);
 
     return (
-        <Button variant="outlined" color="secondary" onClick={createChampionship} disabled={loading}>{'Criar um torneio!'}</Button>
+        <Center>
+            <Button variant="outlined" color="secondary" onClick={createChampionship} disabled={loading}>{'Criar um torneio!'}</Button>
+        </Center>
     );
 }

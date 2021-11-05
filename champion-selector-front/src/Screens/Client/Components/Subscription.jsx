@@ -1,5 +1,6 @@
 import React from 'react';
 import Box from "@material-ui/core/Box";
+import { Center } from '../../../Components/Center';
 import { ShareChampionship } from '../../../Components/ShareChampionship';
 import { JudgeNameInput } from '../../../Components/JudgeNameInput'
 
@@ -13,8 +14,8 @@ function SubscriptionView (props) {
     }, [onSubmit]);
 
     return (
-        <React.Fragment>
-            <Box style={{ padding: '0 10px' }}>
+        <Center>
+             <Box style={{ padding: '0 10px' }}>
                 <ShareChampionship
                     url={window.location.href}
                 />
@@ -29,7 +30,7 @@ function SubscriptionView (props) {
                     canEnter={props.canEnter}
                 />
             </Box>
-        </React.Fragment>
+        </Center>
     );
 }
 

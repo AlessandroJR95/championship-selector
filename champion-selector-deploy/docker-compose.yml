@@ -1,26 +1,52 @@
 version: '3'
 services:
   front:
-    image: "node:current-alpine3.10"
-    working_dir: /usr/local/app
-    command: npm run watch
+    image: "champion-selector/front"
     volumes:
-      - ../champion-selector-front:/usr/local/app
-      - ../champion-selector-connector:/usr/local/champion-selector-connector
+      - ../../champion-selector-front:/usr/local/app
+      - ../../champion-selector-connector:/usr/local/champion-selector-connector
       - front-assets:/usr/local/app/dist
   
   back:
-    image: "node:current-alpine3.10"
-    working_dir: /usr/local/app
-    command: npm run watch
+    image: "champion-selector/back"
     ports:
-      - "8080:8080"
+      - "8080"
+      - "9229:9229"
     environment: 
       - SESSION_SECRET=dev
       - LOG_PATH=log
+      - REDIS_PORT=6379
+      - REDIS_PASS=dev
+      - REDIS_HOST=redis
+      - MSG_URL=dev:dev
     volumes:
-      - ../champion-selector:/usr/local/app
-      - ../champion-selector/log:/usr/local/app/log
+      - ../../champion-selector-back:/usr/local/app
+      - ../../champion-selector-back/log:/usr/local/app/log
+
+  redis:
+    image: redis
+    command: redis-server --requirepass dev
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: dev
+      RABBITMQ_DEFAULT_PASS: dev
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  movie:
+    image: "champion-selector/back"
+    ports:
+      - "9090:9090"
+    environment: 
+      - MOVIE_DIR=movie-data
+    volumes:
+      - ../../movie-selector:/usr/local/app
+      - ../../movie-selector/movie-data:/usr/local/app/movie-data
 
   web:
     image: "nginx"
@@ -29,6 +55,8 @@ services:
     volumes:
       - ./nginx/conf:/etc/nginx
       - front-assets:/usr/share/nginx/html
+      - ../../movie-images:/usr/share/nginx/html/public/images
+      #- ../../champion-selector/coverage/lcov-report:/usr/share/nginx/html
 
 volumes:
   front-assets:

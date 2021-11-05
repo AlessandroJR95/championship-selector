@@ -7,6 +7,8 @@ function VotingContainer(props) {
 
     return (
         <VotingView
+            {...props}
+            isOwner={state.isOwner}
             participantList={state.participantList}
             judgeList={state.judgeList}
             whoVoted={state.whoVoted}
@@ -17,6 +19,13 @@ function VotingContainer(props) {
             canVote={!state.hasVoted && state.canInput}
             winner={state.winners[state.roundIndex - 1]}
             roundHistory={state.roundHistory}
+            roundName={state.roundName}
+            VotingInputCmp={props.VotingInputCmp}
+            onJudgeKick={actions.kickJudge}
+            roundIndex={state.roundIndex}
+            scoreboard={state.scoreboard}
+            fetchInviteLink={actions.fetchInviteLink}
+            likeList={state.likeList}
         />
     );
 }

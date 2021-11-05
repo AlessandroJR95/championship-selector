@@ -30,11 +30,11 @@ export function JudgeList(props) {
             <Grid container spacing={0}>
                 {
                     props.judgeList.map((item, index, all) => (
-                        <React.Fragment key={item.id}>
+                        <React.Fragment key={item.judgeID}>
                             <Grid item xs={4}>
-                                <Box style={{ display: 'flex' }} onClick={item.id === judgeID ? null : handleOpen(item.id)}>
+                                <Box style={{ display: 'flex' }} onClick={item.judgeID === judgeID ? null : handleOpen(item.judgeID)}>
                                     <Box style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', margin: 5 }}>
-                                        <IconSelectorIcon fontSize={'small'} name={item.icon} color={item.id === judgeID ? 'secondary' : 'primary'} />
+                                        <IconSelectorIcon fontSize={'small'} name={item.icon} color={item.judgeID === judgeID ? 'secondary' : 'primary'} />
                                     </Box>
                                     <Box>
                                         <Typography variant={'subtitle1'} color={readyCheck(item)  ? 'textPrimary' : 'textSecondary'}>
@@ -47,15 +47,19 @@ export function JudgeList(props) {
                     ))
                 }
             </Grid>
-            <Menu
-                id={"judgeOptionsMenu"}
-                anchorEl={currentJudge.target}
-                keepMounted
-                open={Boolean(currentJudge.target)}
-                onClose={handleClose}
-            >
-                <MenuItem onClick={handleKick}>Kick</MenuItem>
-            </Menu>
+            {
+                onKick && (
+                    <Menu
+                        id={"judgeOptionsMenu"}
+                        anchorEl={currentJudge.target}
+                        keepMounted
+                        open={Boolean(currentJudge.target)}
+                        onClose={handleClose}
+                    >
+                        <MenuItem onClick={handleKick}>Kick</MenuItem>
+                    </Menu>
+                )
+            }
         </React.Fragment>
     );
 }

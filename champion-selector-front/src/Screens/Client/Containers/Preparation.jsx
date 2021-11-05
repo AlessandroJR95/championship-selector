@@ -7,6 +7,7 @@ function PreparationContainer(props) {
 
     return (
         <PreparationView
+            {...props}
             isOwner={state.isOwner}
             startChampionship={actions.startChampionship}
             addParticipant={actions.addParticipant}
@@ -15,7 +16,10 @@ function PreparationContainer(props) {
             judgeID={state.judgeID}
             canAddParticipant={state.canInput}
             disableListDelete={!state.canInput}
+            canStartChampionship={state.canInput}
             onParticipantDelete={actions.deleteParticipant}
+            onParticipantLike={actions.likeParticipant}
+            likes={state.likes}
             allReady={state.allReady}
             isReady={state.isReady}
             onReadyClick={actions.imJudgeAndImReady}

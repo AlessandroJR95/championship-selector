@@ -6,15 +6,16 @@ import { WinnerBadge } from './WinnerBadge';
 
 export function RoundWinner(props) {
     const [ showIntroduction, setShowIntroduction ] = React.useState(false);
-    const { onTransitionEnd, fadeOut } = props;
+    const { onTransitionEnd, onEntered, fadeOut } = props;
 
     const dismissAnnoucer = React.useCallback(() => {
+        onEntered && onEntered();
         setTimeout(() => {
             if (fadeOut) {
                 setShowIntroduction(false);
             }
         }, 1500);
-    }, [setShowIntroduction, fadeOut]);
+    }, [setShowIntroduction, fadeOut, onEntered]);
 
     React.useLayoutEffect(() => {
         setShowIntroduction(true);
@@ -31,7 +32,7 @@ export function RoundWinner(props) {
                 <Fade show={showIntroduction} longer delay={3000} onEntered={dismissAnnoucer} onExited={onTransitionEnd}>
                     <Box textAlign='center'>
                         <Typography variant="h3" component="h5" color={'secondary'}>
-                            {props.roundWinner}
+                            {props.roundWinner.data.text}
                         </Typography>
                     </Box>
                 </Fade>

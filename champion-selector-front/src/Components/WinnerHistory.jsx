@@ -8,56 +8,68 @@ import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import { Fade } from './Fade/Fade';
 
 export function WinnerHistory(props) {
-    const { roundHistory } = props;
+    const { roundHistory, shouldUpdateHistory } = props;
+    const [ roundHistoryState, setRoundHistoryState ] = React.useState(roundHistory);
+    const [ shouldUpdate, setShouldUpdate ] = React.useState(shouldUpdateHistory);
+
+    React.useEffect(() => {
+        if (shouldUpdate) {
+            setRoundHistoryState(roundHistory);
+            setShouldUpdate(false);
+        }
+    }, [shouldUpdate, roundHistory]);
+
+    React.useEffect(() => {
+        if (shouldUpdateHistory) {
+            setShouldUpdate(true);
+        }
+    }, [shouldUpdateHistory]);
 
     return (
-        <Fade show={Boolean(roundHistory.length)}>
+        <Box>
             <Box>
-                <Box>
-                    <Typography variant={'h5'} color={'primary'}>
-                        {'Histórico'}
-                    </Typography>
-                </Box>
-                <TableContainer component={Paper}>
-                    <Table size="small">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Round</TableCell>
-                                <TableCell>Ganhador</TableCell>
-                                <TableCell>Perdedor</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                        {
-                            roundHistory.map((history, index) => {
-                                return (
-                                    <TableRow key={index}>
-                                        <TableCell>
-                                            <Typography variant={'body1'} color={'primary'}>
-                                                {history.round}
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Typography variant={'body1'} color={'primary'}>
-                                                {history.winner}
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Typography variant={'body1'} color={'secondary'}>
-                                                {history.loser}
-                                            </Typography>
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })
-                        }
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                <Typography variant={'h5'} color={'primary'}>
+                    {'Histórico'}
+                </Typography>
             </Box>
-        </Fade>
+            <TableContainer component={Paper}>
+                <Table size="small">
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Round</TableCell>
+                            <TableCell>Ganhador</TableCell>
+                            <TableCell>Perdedor</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                    {
+                        roundHistoryState.map((history, index) => {
+                            return (
+                                <TableRow key={index}>
+                                    <TableCell>
+                                        <Typography variant={'body1'} color={'primary'}>
+                                            {history.round}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography variant={'body1'} color={'primary'}>
+                                            {history.winner}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography variant={'body1'} color={'secondary'}>
+                                            {history.loser}
+                                        </Typography>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })
+                    }
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Box>
     );
 }
