@@ -1,14 +1,14 @@
 version: '3'
 services:
   front:
-    image: "champion-selector/front"
+    image: "node-dev"
     volumes:
-      - ../../champion-selector-front:/usr/local/app
-      - ../../champion-selector-connector:/usr/local/champion-selector-connector
+      - ../champion-selector-front:/usr/local/app
+      - ../champion-selector-connector:/usr/local/champion-selector-connector
       - front-assets:/usr/local/app/dist
   
   back:
-    image: "champion-selector/back"
+    image: "node-dev"
     ports:
       - "8080"
       - "9229:9229"
@@ -20,8 +20,8 @@ services:
       - REDIS_HOST=redis
       - MSG_URL=dev:dev
     volumes:
-      - ../../champion-selector-back:/usr/local/app
-      - ../../champion-selector-back/log:/usr/local/app/log
+      - ../champion-selector-back:/usr/local/app
+      - ../champion-selector-back/log:/usr/local/app/log
 
   redis:
     image: redis
@@ -39,14 +39,14 @@ services:
       - "15672:15672"
 
   movie:
-    image: "champion-selector/back"
+    image: "node-dev"
     ports:
       - "9090:9090"
     environment: 
       - MOVIE_DIR=movie-data
     volumes:
-      - ../../movie-selector:/usr/local/app
-      - ../../movie-selector/movie-data:/usr/local/app/movie-data
+      - ../movie-selector:/usr/local/app
+      - ../movie-selector/movie-data:/usr/local/app/movie-data
 
   web:
     image: "nginx"
@@ -55,7 +55,7 @@ services:
     volumes:
       - ./nginx/conf:/etc/nginx
       - front-assets:/usr/share/nginx/html
-      - ../../movie-images:/usr/share/nginx/html/public/images
+      - ../movie-images:/usr/share/nginx/html/public/images
       #- ../../champion-selector/coverage/lcov-report:/usr/share/nginx/html
 
 volumes:
