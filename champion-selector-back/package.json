@@ -18,7 +18,10 @@
   "license": "ISC",
   "devDependencies": {
     "@types/amqplib": "^0.5.13",
+    "@types/connect-redis": "0.0.17",
+    "@types/cookie-parser": "^1.4.2",
     "@types/express": "^4.17.7",
+    "@types/express-session": "^1.17.4",
     "@types/jest": "^26.0.9",
     "@types/redis": "^2.8.25",
     "babel-jest": "^26.2.2",
