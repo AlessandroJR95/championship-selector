@@ -40,7 +40,7 @@
     "axios": "^0.19.2",
     "connect-redis": "^5.0.0",
     "cookie-parser": "^1.4.5",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "express-session": "^1.17.1",
     "redis": "^3.0.2",
     "rxjs": "^6.6.2"
